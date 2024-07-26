@@ -17,7 +17,7 @@ show-help () {
     #set:    Set a default settings for $basename $0
     #edit:   Edits a paramatter of a VM, same behavious as start
 
-HOMEU="$(echo $XDG_CONFIG_HOME/qemu-wrap || $HOME/.config/qemu-wrap/)"
+HOMEU="$( if [ -z ${XDG_CONFIG_DIR+x}];then echo "$HOME/.config";else echo "$XDG_CONFIG_HOME";fi)"
 
 make-settings () {
     mkdir "$HOMEU"
@@ -49,7 +49,7 @@ MACHINE=\"-machine type=q35,accel=kvm\"
 DISPLAY=\"-display gtk\"
 PROC="$( if [["$cpuh" == [yY]]];then echo '-cpu host';fi)"
 UEFI="$( if [["${uefic,,}" == 'uefi']];then echo "-drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
--drive if=pflash,format=raw,file=$HOMEU/vm/$fullname/OVMF_VARS.fd")"\n" > "$HOMEU/vm/$fullname/settings.sh"
+-drive if=pflash,format=raw,file=$HOMEU/vm/$fullname/OVMF_VARS.fd";fi)"\n" > "$HOMEU/vm/$fullname/settings.sh"
 # return vm name, and the iso name for start-vm
 echo "$fullname:$HOMEU/iso/$iso"
 }
