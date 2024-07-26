@@ -49,9 +49,10 @@ echo "$fullname:$iso"
 start-vm () {
     # Input $1 is the name of the vm
     # Input $2 is for the name of the iso
-    NAME="$1"
-    ISO="$( if [ -n "$ISO"];then echo "-cdrom $2";fi )"
-    DEVICE="-drive file=$HOMEU/vm/$NAME/img.qcow,format=qcow2"
+    local NAME="$1"
+    local ISO="$( if [ ${#2} -ne 0];then echo "-cdrom $2";fi )"
+    local DEVICE="-drive file=$HOMEU/vm/$NAME/img.qcow,format=qcow2"
+    echo $NAME
 
     source "$HOMEU/vm/$NAME/settings.sh"
     qemu-system-x86_64 $NUM_RAM  $MACHINE $CORE_COUNT $DISPLAY $PROC $UEFI $ISO $DRIVE
@@ -87,11 +88,11 @@ case $COMMAND in
         exit 0
         ;;
     start)
-        if [-n $2];then
+        if [ ${#2} -ne 0 ];then
             start-vm $2
         else
             cd $HOMEU/vm
-            start-vm "$( fzf )"
+            start-vm "$( find . -type d -print | fzf )"
         fi
         ;;
     delete)
