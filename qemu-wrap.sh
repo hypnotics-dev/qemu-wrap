@@ -50,9 +50,8 @@ start-vm () {
     # Input $1 is the name of the vm
     # Input $2 is for the name of the iso
     local NAME="$1"
-    local ISO="$( if [ ${#2} -ne 0];then echo "-cdrom $2";fi )"
+    local ISO="$( if [ ${#2} -ne 0 ];then echo "-cdrom $2";fi )"
     local DEVICE="-drive file=$HOMEU/vm/$NAME/img.qcow,format=qcow2"
-    echo $NAME
 
     source "$HOMEU/vm/$NAME/settings.sh"
     qemu-system-x86_64 $NUM_RAM  $MACHINE $CORE_COUNT $DISPLAY $PROC $UEFI $ISO $DRIVE
