@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 
-deps-check () {
-    fzf --version > /dev/null || echo Missing fzf && exit 1
-
-}
-
 show-help () {
     printf "    Usage $basename $0 [COMMAND] [OPTION]
     new:    Create a new VM
@@ -14,13 +9,11 @@ show-help () {
     mod:    Opens $EDITOR for given VM, same behavious as start\n"
     exit 0
 }
-    #set:    Set a default settings for $basename $0
-    #edit:   Edits a paramatter of a VM, same behavious as start
 
-HOMEU="$( if [ -z ${XDG_CONFIG_DIR+x}];then echo "$HOME/.config";else echo "$XDG_CONFIG_HOME";fi)"
+HOMEU="$( if [ -z ${XDG_CONFIG_DIR+x}];then echo "$HOME/.config/qemu-wrap";else echo "$XDG_CONFIG_HOME/qemu-wrap";fi)"
 
 make-settings () {
-    mkdir "$HOMEU"
+    mkdir "$HOMEU" 2> /dev/null
     touch "$HOMEU/settings.sh"
 }
 
@@ -38,34 +31,34 @@ new-vm () {
 
     mkdir -p $HOMEU/vm/$fullname
     cp /usr/share/OVMF/OVMF_VARS.fd $HOMEU/vm/$fullname/ 
-    qemu-img create -f qcow2 $HOMEU/vm/$fullname/img.qcow $disks
+    qemu-img create -f qcow2 $HOMEU/vm/$fullname/img.qcow $disks > /dev/null
 
 
     # Print out settings to a settings file
-    printf "
+    echo "
 CORE_COUNT=\"-smp $cpuc\"
 NUM_RAM=\"-m $ramn\"
 MACHINE=\"-machine type=q35,accel=kvm\"
 DISPLAY=\"-display gtk\"
-PROC="$( if [["$cpuh" == [yY]]];then echo '-cpu host';fi)"
-UEFI="$( if [["${uefic,,}" == 'uefi']];then echo "-drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
--drive if=pflash,format=raw,file=$HOMEU/vm/$fullname/OVMF_VARS.fd";fi)"\n" > "$HOMEU/vm/$fullname/settings.sh"
+PROC="$( if [[ "${cpuh,,}" == "y" ]] ;then echo \"-cpu host \";fi)"
+UEFI="$( if [[ "${uefic,,}" == "y" ]] ;then echo \"-drive if=pflash,format=raw,readonly=on,file=/usr/share/OVMF/OVMF_CODE.fd \
+-drive if=pflash,format=raw,file=$HOMEU/vm/$fullname/OVMF_VARS.fd\";fi)"" > "$HOMEU/vm/$fullname/settings.sh"
 # return vm name, and the iso name for start-vm
-echo "$fullname:$HOMEU/iso/$iso"
+echo "$fullname:$iso"
 }
 start-vm () {
     # Input $1 is the name of the vm
     # Input $2 is for the name of the iso
     NAME="$1"
-    ISO="$( if [-n "$ISO"];then echo "-cdrom $2";fi)"
+    ISO="$( if [ -n "$ISO"];then echo "-cdrom $2";fi )"
     DEVICE="-drive file=$HOMEU/vm/$NAME/img.qcow,format=qcow2"
 
     source "$HOMEU/vm/$NAME/settings.sh"
     qemu-system-x86_64 $NUM_RAM  $MACHINE $CORE_COUNT $DISPLAY $PROC $UEFI $ISO $DRIVE
 }
 list-vm () {
-    # $1 is HOMEU
-    for i in $1/qemu-wrap/vm/*;do
+    cd "$HOMEU/vm/"
+    for i in $(ls) ;do
         echo "$i"
     done
 }
@@ -81,11 +74,11 @@ mod-vm () {
 
 COMMAND="$1"
 
-case COMMAND in
+case $COMMAND in
     new)
-        local returned=new-vm
-        local name=$( echo $returned |  awk -F ':' '{$1}')
-        local iso=$( echo $returned | awk -F ':' '{$2}')
+        returned=$( new-vm )
+        name=$( echo $returned |  awk -F ':' '{print $1}')
+        iso=$( echo $returned | awk -F ':' '{print $2}')
         start-vm $name $iso
         exit 0
         ;;
