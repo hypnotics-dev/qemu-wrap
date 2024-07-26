@@ -11,11 +11,11 @@ show-help () {
     list:   Print out all VMs
     start:  Start a VM [OPTIONS], if none given use fzf to choose
     delete: Removes a VM, same behaviour as start
-    edit:   Edits a paramatter of a VM, same behavious as start
-    set:    Set a default settings for $basename $0
     mod:    Opens $EDITOR for given VM, same behavious as start\n"
     exit 0
 }
+    #set:    Set a default settings for $basename $0
+    #edit:   Edits a paramatter of a VM, same behavious as start
 
 HOMEU="$(echo $XDG_CONFIG_HOME/qemu-wrap || $HOME/.config/qemu-wrap/)"
 
@@ -25,12 +25,6 @@ make-settings () {
 }
 
 source "$HOMEU/settings.sh" || make-settings 
-
-# settings 
-# Memory: 8G
-# CPUs: 6
-# use host cpu
-# uefi firmaware location
 
 new-vm () {
     # Get settings
@@ -80,6 +74,8 @@ delete-vm () {
     read -p "Do you want to delete: $2, [Y] or [N]" confirm
     if [[ $confirm = [Yy] ]];then rm -rf $HOMEU/vm/$1;fi
 }
-edit-vm () {}
-mod-vm () {}
+mod-vm () {
+    # $1 is the name of the vm to edit
+    $EDITOR $HOMEU/vm/$1 || vim $HOMEU/vm/$1
+}
 
