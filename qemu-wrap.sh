@@ -71,11 +71,56 @@ list-vm () {
 }
 delete-vm () {
     # $1 is dir to delete
-    read -p "Do you want to delete: $2, [Y] or [N]" confirm
+    read -p "Do you want to delete: $1, [Y] or [N]" confirm
     if [[ $confirm = [Yy] ]];then rm -rf $HOMEU/vm/$1;fi
 }
 mod-vm () {
     # $1 is the name of the vm to edit
     $EDITOR $HOMEU/vm/$1 || vim $HOMEU/vm/$1
 }
+
+COMMAND="$1"
+
+case COMMAND in
+    new)
+        local returned=new-vm
+        local name=$( echo $returned |  awk -F ':' '{$1}')
+        local iso=$( echo $returned | awk -F ':' '{$2}')
+        start-vm $name $iso
+        exit 0
+        ;;
+    list)
+        list-vm
+        exit 0
+        ;;
+    start)
+        if [-n $2];then
+            start-vm $2
+        else
+            cd $HOMEU/vm
+            start-vm "$( fzf )"
+        fi
+        ;;
+    delete)
+        if [-n $2];then
+            delete-vm $2
+        else
+            cd $HOMEU/vm
+            delete-vm "$( fzf )"
+        fi
+        ;;
+    mod)
+        mod-vm
+        exit 0
+        ;;
+    help)
+        show-help
+        exit 0
+        ;;
+    *)
+        show-help
+        exit 0
+        ;;
+esac
+
 
