@@ -17,14 +17,14 @@ show-help () {
     exit 0
 }
 
-HOMEU="$(echo $XDG_CONFIG_HOME || $HOME/.config)"
+HOMEU="$(echo $XDG_CONFIG_HOME/qemu-wrap || $HOME/.config/qemu-wrap/)"
 
 make-settings () {
-    mkdir "$1/qemu-wrap/"
-    touch "$1/qemu-wrap/settings.sh"
+    mkdir "$HOMEU"
+    touch "$HOMEU/settings.sh"
 }
 
-source "$HOMEU/qemu-wrap/settings.sh" || make-settings $HOMEU
+source "$HOMEU/settings.sh" || make-settings 
 
 # settings 
 # Memory: 8G
@@ -33,7 +33,6 @@ source "$HOMEU/qemu-wrap/settings.sh" || make-settings $HOMEU
 # uefi firmaware location
 
 new-vm () {
-    # $1 is HOMEU
     # Get settings
     read -p "Enter the name of the VM: " fullname
     read -p "ISO name: " iso
@@ -43,7 +42,6 @@ new-vm () {
     read -p "Should we use the host cpu, type [Y,N]: " cpuh
     read -p "Should the system use UEFI [Y,N]: " uefic
 
-    HOMEU="$1/qemu-wrap"
     mkdir -p $HOMEU/vm/$fullname
     cp /usr/share/OVMF/OVMF_VARS.fd $HOMEU/vm/$fullname/ 
     qemu-img create -f qcow2 $HOMEU/vm/$fullname/img.qcow $disks
@@ -63,18 +61,25 @@ echo "$fullname:$HOMEU/iso/$iso"
 }
 start-vm () {
     # Input $1 is the name of the vm
-    # Input $2 is for HOMEU
-    # Input $3 is for the name of the iso
+    # Input $2 is for the name of the iso
     NAME="$1"
-    HOMEU="$1/qemu-wrap/vm"
-    ISO="$( if [-n "$ISO"];then echo "-cdrom $3";fi)"
-    DEVICE="-drive file=$HOMEU/$NAME/img.qcow,format=qcow2"
+    ISO="$( if [-n "$ISO"];then echo "-cdrom $2";fi)"
+    DEVICE="-drive file=$HOMEU/vm/$NAME/img.qcow,format=qcow2"
 
-    source "$HOMEU/$NAME/settings.sh"
-    qemu-system-x86_64 $NUM_RAM  $MACHINE $CORE_COUNT $DISPLAY $PROC $UEFI $ISO
+    source "$HOMEU/vm/$NAME/settings.sh"
+    qemu-system-x86_64 $NUM_RAM  $MACHINE $CORE_COUNT $DISPLAY $PROC $UEFI $ISO $DRIVE
 }
-list-vm () {}
-delete-vm () {}
+list-vm () {
+    # $1 is HOMEU
+    for i in $1/qemu-wrap/vm/*;do
+        echo "$i"
+    done
+}
+delete-vm () {
+    # $1 is dir to delete
+    read -p "Do you want to delete: $2, [Y] or [N]" confirm
+    if [[ $confirm = [Yy] ]];then rm -rf $HOMEU/vm/$1;fi
+}
 edit-vm () {}
 mod-vm () {}
 
