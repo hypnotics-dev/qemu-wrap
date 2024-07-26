@@ -65,7 +65,8 @@ list-vm () {
 }
 delete-vm () {
     # $1 is dir to delete
-    read -p "Do you want to delete: $1, [Y] or [N]" confirm
+    if [ ${#1} -eq 0 ];then exit 0;fi
+    read -p "Do you want to delete: $1, [Y] or [N] " confirm
     if [[ $confirm = [Yy] ]];then rm -rf $HOMEU/vm/$1;fi
 }
 mod-vm () {
@@ -92,15 +93,15 @@ case $COMMAND in
             start-vm $2
         else
             cd $HOMEU/vm
-            start-vm "$( find . -type d -print | fzf )"
+            start-vm 
         fi
         ;;
     delete)
-        if [-n $2];then
+        if [ ${#2} -ne 0 ];then
             delete-vm $2
         else
             cd $HOMEU/vm
-            delete-vm "$( fzf )"
+            delete-vm "$( find . -type d -print | fzf )"
         fi
         ;;
     mod)
